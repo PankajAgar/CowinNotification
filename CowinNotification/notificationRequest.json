@@ -1,0 +1,18 @@
+{
+  "NotificationData": [
+    {
+      "PinCodes": [
+        247667
+      ],
+      "Email": "abc@gmail.com",
+      "AgeLimit": 45,
+      "FeeType": "Free"
+    },
+    {
+      "PinCodes": [
+        262308
+      ],
+      "Phone": "0000000000"
+    }
+  ]
+}
