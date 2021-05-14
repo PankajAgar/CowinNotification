@@ -3,6 +3,7 @@ using CowinNotification.Models;
 using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Net.Http;
 using System.Threading.Tasks;
 
@@ -10,57 +11,81 @@ namespace CowinNotification.Services
 {
     public class CowinClient : ICowinClient
     {
-        public async Task<IReadOnlyDictionary<string, List<AvailableCenterAndSlots>>> FetchAvailableCenters(CowinRequest cowinRequest)
-        {
-            var response = new Dictionary<string, List<AvailableCenterAndSlots>>();
-            var url = "https://cdn-api.co-vin.in/api/v2/appointment/sessions/public/calendarByPin?pincode=" + cowinRequest.PinCode + "&date=" + DateTime.Now.ToString("dd-MM-yy") + "";
+        private const string _cowinBaseURL = "https://cdn-api.co-vin.in/api/v2/";
 
-            using var client = new HttpClient();
-            var apiResponse = await client.GetAsync(url);
-            var apiResponseJson = await apiResponse.Content.ReadAsStringAsync();
-            var cowinResponse = JsonConvert.DeserializeObject<CowinResponse>(apiResponseJson);
+        public async Task<IReadOnlyCollection<AvailableCenterAndSlots>> GetAvailableCentersByPinCodeAsync(CowinRequestFilter cowinRequest, int pinCode)
+        {
+            var url = $"{_cowinBaseURL}appointment/sessions/public/calendarByPin?pincode={pinCode}&date={DateTime.Now:dd-MM-yy}";
+            return await GetAvailableCentersAsync(cowinRequest, url);
+        }
+
+        public async Task<IReadOnlyCollection<AvailableCenterAndSlots>> GetAvailableCentersByDistrictAsync(CowinRequestFilter cowinRequest, string state, string district)
+        {
+            var stateDetail = await GetStateAsync(state);
+            if (stateDetail == null)
+                throw new Exception($"No record found for state - {state}");
+
+            var districtDetail = await GetDistrictAsync(stateDetail.Id, district);
+            if (districtDetail == null)
+                throw new Exception($"No record found for district - {district}");
+
+            var url = $"{_cowinBaseURL}appointment/sessions/public/calendarByDistrict?district_id={districtDetail.Id}&date={DateTime.Now:dd-MM-yy}";
+            return await GetAvailableCentersAsync(cowinRequest, url);
+        }
+
+        private async Task<State> GetStateAsync(string state)
+        {
+            var url = $"{_cowinBaseURL}admin/location/states";
+            var cowinResponse = await GetCowinResponseAsync<CowinStateResponse>(url);
+            return cowinResponse.States.FirstOrDefault(s => string.Equals(s.Name, state, StringComparison.InvariantCultureIgnoreCase));
+        }
+
+        private async Task<District> GetDistrictAsync(int stateId, string district)
+        {
+            var url = $"{_cowinBaseURL}admin/location/districts/{stateId}";
+            var cowinResponse = await GetCowinResponseAsync<CowinDistrictResponse>(url);
+            return cowinResponse.Districts.FirstOrDefault(s => string.Equals(s.Name, district, StringComparison.InvariantCultureIgnoreCase));
+        }
+
+        private async Task<IReadOnlyCollection<AvailableCenterAndSlots>> GetAvailableCentersAsync(CowinRequestFilter cowinRequest, string url)
+        {
+            var centerAndSlots = new List<AvailableCenterAndSlots>();
+            var cowinResponse = await GetCowinResponseAsync<CowinCenterResponse>(url);
 
             foreach (var vaccineCenter in cowinResponse.Centers)
             {
-                if (string.IsNullOrWhiteSpace(cowinRequest.FeeType) || vaccineCenter.FeeType == cowinRequest.FeeType)
+                if (string.IsNullOrWhiteSpace(cowinRequest.FeeType) || string.Equals(vaccineCenter.FeeType, cowinRequest.FeeType, StringComparison.InvariantCultureIgnoreCase))
                 {
                     foreach (var session in vaccineCenter.Sessions)
                     {
-                        if (session.AvailableCapacity > 0
-                            && (cowinRequest.AgeLimit == null || session.AgeLimit == cowinRequest.AgeLimit.Value))
+                        if ((((cowinRequest.AgeLimit ?? 0) == 0) || session.AgeLimit == cowinRequest.AgeLimit)
+                            && (session.AvailableCapacity > (cowinRequest.MinimumAvailableCapacity ?? 0))
+                            && (string.IsNullOrWhiteSpace(cowinRequest.Vaccine) || string.Equals(session.Vaccine, cowinRequest.Vaccine, StringComparison.InvariantCultureIgnoreCase)))
                         {
-                            if (response.ContainsKey(session.Date))
-                                response[session.Date].Add(
-                                    new AvailableCenterAndSlots
-                                    {
-                                        CenterName = vaccineCenter.Name,
-                                        AgeLimit = session.AgeLimit,
-                                        VaccineName = session.Vaccine,
-                                        FeeType = vaccineCenter.FeeType,
-                                        AvailableCapacity = session.AvailableCapacity,
-                                        Slots = session.Slots
-                                    });
-                            else
-                                response.Add(
-                                    session.Date,
-                                    new List<AvailableCenterAndSlots>
-                                    {
-                                         new AvailableCenterAndSlots
-                                         {
-                                            CenterName = vaccineCenter.Name,
-                                            AgeLimit = session.AgeLimit,
-                                            VaccineName = session.Vaccine,
-                                            FeeType = vaccineCenter.FeeType,
-                                            AvailableCapacity = session.AvailableCapacity,
-                                            Slots = session.Slots
-                                         }
-                                    });
+                            centerAndSlots.Add(new AvailableCenterAndSlots
+                            {
+                                Date = session.Date,
+                                PinCode = vaccineCenter.Pincode,
+                                CenterName = vaccineCenter.Name,
+                                AgeLimit = session.AgeLimit,
+                                VaccineName = session.Vaccine,
+                                FeeType = vaccineCenter.FeeType,
+                                AvailableCapacity = session.AvailableCapacity,
+                                Slots = session.Slots
+                            });
                         }
                     }
                 }
             }
+            return centerAndSlots;
+        }
 
-            return response;
+        private async Task<T> GetCowinResponseAsync<T>(string url)
+        {
+            using var client = new HttpClient();
+            var apiResponse = await client.GetAsync(url);
+            var apiResponseJson = await apiResponse.Content.ReadAsStringAsync();
+            return JsonConvert.DeserializeObject<T>(apiResponseJson);
         }
     }
 }

@@ -1,18 +1,18 @@
 {
   "NotificationData": [
     {
+      "SearchType": "DistrictName",
       "PinCodes": [
-        247667
+        "000000"
       ],
-      "Email": "abc@gmail.com",
+      "StateName": "Uttarakhand",
+      "DistrictName": "Udham Singh Nagar",
+      "Phone": 1234567890,
+      "Email": "@gmail.com",
       "AgeLimit": 45,
-      "FeeType": "Free"
-    },
-    {
-      "PinCodes": [
-        262308
-      ],
-      "Phone": "0000000000"
+      "MinimumAvailableCapacity": 1,
+      "FeeType": "Free",
+      "Vaccine": "COVAXIN"
     }
   ]
 }

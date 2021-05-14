@@ -5,6 +5,7 @@
     <TargetFramework>netcoreapp3.1</TargetFramework>
     <Authors>Pankaj Agarwal</Authors>
     <Company>IHS Markit</Company>
+    <Product>CowinNotification By Pankaj</Product>
   </PropertyGroup>
 
   <ItemGroup>

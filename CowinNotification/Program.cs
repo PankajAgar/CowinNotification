@@ -5,6 +5,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Newtonsoft.Json;
 using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Reflection;
@@ -79,26 +80,17 @@ namespace CowinNotification
 
             foreach (var notificationData in notificationRequest.NotificationData)
             {
-                if (string.IsNullOrWhiteSpace(notificationData.Phone) && string.IsNullOrWhiteSpace(notificationData.Email))
+                try
                 {
-                    stringBuilderLog.AppendLine("Email sent and phone both are empty");
-                }
-
-                foreach (var pinCode in notificationData.PinCodes)
-                {
-                    var cowinRequest = new CowinRequest
+                    if (string.IsNullOrWhiteSpace(notificationData.Phone) && string.IsNullOrWhiteSpace(notificationData.Email))
                     {
-                        PinCode = pinCode,
-                        AgeLimit = notificationData.AgeLimit,
-                        FeeType = notificationData.FeeType
-                    };
+                        stringBuilderLog.AppendLine("Email and phone both are empty.");
+                    }
 
-                    var cowinResponse = await cowinClient.FetchAvailableCenters(cowinRequest);
+                    var cowinResponse = await GetAvailableCentersAsync(cowinClient, notificationData, stringBuilderLog);
 
                     if (cowinResponse.Count > 0)
                     {
-                        stringBuilderLog.AppendLine($"Got response for {cowinRequest.PinCode}");
-
                         if (!string.IsNullOrWhiteSpace(notificationData.Phone))
                             await notificationSender.SendSMS(cowinResponse, notificationData.Phone, stringBuilderLog);
 
@@ -106,7 +98,55 @@ namespace CowinNotification
                             await notificationSender.SendEmail(cowinResponse, notificationData.Email, executingDirectory, stringBuilderLog);
                     }
                 }
+                catch (Exception ex)
+                {
+                    stringBuilderLog.AppendLine(ex.Message);
+                }
             }
+        }
+
+        private static async Task<IReadOnlyCollection<AvailableCenterAndSlots>> GetAvailableCentersAsync(ICowinClient cowinClient, NotificationData notificationData, StringBuilder stringBuilderLog)
+        {
+            var cowinRequest = new CowinRequestFilter
+            {
+                AgeLimit = notificationData.AgeLimit,
+                MinimumAvailableCapacity = notificationData.MinimumAvailableCapacity,
+                FeeType = notificationData.FeeType,
+                Vaccine = notificationData.Vaccine
+            };
+            var response = new List<AvailableCenterAndSlots>();
+
+            if (string.Equals(notificationData.SearchType, "PinCode", StringComparison.InvariantCultureIgnoreCase))
+            {
+                if (notificationData.PinCodes.Count == 0)
+                {
+                    stringBuilderLog.AppendLine("No pin codes to search");
+                }
+                else
+                {
+                    foreach (var pinCode in notificationData.PinCodes)
+                    {
+                        response.AddRange(await cowinClient.GetAvailableCentersByPinCodeAsync(cowinRequest, pinCode));
+                    }
+                }
+            }
+            else if (string.Equals(notificationData.SearchType, "DistrictName", StringComparison.InvariantCultureIgnoreCase))
+            {
+                if (string.IsNullOrWhiteSpace(notificationData.StateName) || string.IsNullOrWhiteSpace(notificationData.DistrictName))
+                {
+                    stringBuilderLog.AppendLine("StateName and DistrictName both are required");
+                }
+                else
+                {
+                    response.AddRange(await cowinClient.GetAvailableCentersByDistrictAsync(cowinRequest, notificationData.StateName, notificationData.DistrictName));
+                }
+            }
+            else
+            {
+                stringBuilderLog.AppendLine($"Invalid search type - {notificationData.SearchType}");
+            }
+
+            return response;
         }
     }
 }

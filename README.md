@@ -15,12 +15,17 @@ A simple console application that sends SMS/Email notification when vaccination 
 
 ## Notification Json
 
-1. Update `notificationRequest.json` with following property.
-2. PinCodes -> List of pin codes to receive notification
-3. Phone to receive notification on message.
-4. Email to receive notification on email.
-5. AgeLimit to filter response by age limit (not required).
-6. FeeType to filter response by fee type (Paid/Free) (not required).
+Update `notificationRequest.json` with following property.
+
+1. `SearchType` to PinCodes or DistrictName 
+2. `PinCodes` -> List of pin codes to receive 
+3. `StateName` and `DistrictName` -> Get all centers for district
+4. `Phone` to receive notification on message.
+5. `Email` to receive notification on email.
+6. `AgeLimit` to filter response by age limit (not required).
+7. `MinimumAvailableCapacity` to filter response minimum vaccine available (not required).
+8. `FeeType` to filter response by fee type (Paid/Free) (not required).
+6. `Vaccine` to filter response by vaccine (COVAXIN/COVISHIELD) (not required).
 
 ## Task Scheduler
 

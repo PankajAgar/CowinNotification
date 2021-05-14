@@ -22,7 +22,7 @@ namespace CowinNotification.Services
             _config = config;
         }
 
-        public async Task SendSMS(IReadOnlyDictionary<string, List<AvailableCenterAndSlots>> availableCenter, string phoneNumber, StringBuilder stringBuilderLog)
+        public async Task SendSMS(IReadOnlyCollection<AvailableCenterAndSlots> availableCenters, string phoneNumber, StringBuilder stringBuilderLog)
         {
             try
             {
@@ -30,7 +30,7 @@ namespace CowinNotification.Services
                     _config.GetSection("TwilioAccountSid").Value,
                     _config.GetSection("TwilioAuthToken").Value);
 
-                var messageBody = GetSMSBody(availableCenter);
+                var messageBody = GetSMSBody(availableCenters);
                 int length = 0;
 
                 while (length <= messageBody.Length)
@@ -58,7 +58,7 @@ namespace CowinNotification.Services
         }
 
         public async Task SendEmail(
-            IReadOnlyDictionary<string, List<AvailableCenterAndSlots>> availableCenter,
+            IReadOnlyCollection<AvailableCenterAndSlots> availableCenters,
             string email,
             string executingDirectory,
             StringBuilder stringBuilderLog)
@@ -72,7 +72,7 @@ namespace CowinNotification.Services
                     mail.From = new MailAddress("GetVaccine@gmail.com", "Be Safe Keep Safe");
                     mail.To.Add(email);
                     mail.Subject = "Cowin Vaccine Available";
-                    mail.Body = emailBody.Replace("##RealData##", GetEmailBodyRows(availableCenter));
+                    mail.Body = emailBody.Replace("##RealData##", GetEmailBodyRows(availableCenters));
                     mail.IsBodyHtml = true;
                     using (SmtpClient smtp = new SmtpClient(_config.GetSection("EmailSmtpAddress").Value, Convert.ToInt32(_config.GetSection("EmailPortNumber").Value)))
                     {
@@ -89,47 +89,33 @@ namespace CowinNotification.Services
             }
         }
 
-        private string GetSMSBody(IReadOnlyDictionary<string, List<AvailableCenterAndSlots>> availableCenter)
+        private string GetSMSBody(IReadOnlyCollection<AvailableCenterAndSlots> availableCenters)
         {
             var stringBuilder = new StringBuilder();
-
             stringBuilder.Append("Vaccination Slots available");
 
-            foreach (var date in availableCenter)
+            foreach (var center in availableCenters)
             {
-                stringBuilder.Append(" on-> ");
-                stringBuilder.Append(date.Key);
-                stringBuilder.Append(" at ");
-
-                foreach (AvailableCenterAndSlots center in date.Value)
-                {
-                    stringBuilder.Append(center.CenterName);
-                    stringBuilder.Append(" left ");
-                    stringBuilder.Append($"{center.VaccineName}-{center.AvailableCapacity}");
-                    stringBuilder.Append(", ");
-                }
+                stringBuilder.Append($" on-> {center.Date} at {center.CenterName} left {center.VaccineName}-{center.AvailableCapacity} ,");
             }
-            return stringBuilder.ToString();
+            return stringBuilder.ToString().TrimStart(',');
         }
 
-        private string GetEmailBodyRows(IReadOnlyDictionary<string, List<AvailableCenterAndSlots>> availableCenter)
+        private string GetEmailBodyRows(IReadOnlyCollection<AvailableCenterAndSlots> availableCenters)
         {
             var stringBuilder = new StringBuilder();
-
-            foreach (var date in availableCenter)
+            foreach (var center in availableCenters)
             {
-                foreach (AvailableCenterAndSlots center in date.Value)
-                {
-                    stringBuilder.AppendLine("<tr>");
-                    stringBuilder.AppendLine($"<td>{date.Key}</td>");
-                    stringBuilder.AppendLine($"<td>{center.CenterName}</td>");
-                    stringBuilder.AppendLine($"<td>{center.AgeLimit}</td>");
-                    stringBuilder.AppendLine($"<td>{center.VaccineName}</td>");
-                    stringBuilder.AppendLine($"<td>{center.AvailableCapacity}</td>");
-                    stringBuilder.AppendLine($"<td>{center.FeeType}</td>");
-                    stringBuilder.AppendLine($"<td>{ string.Join(',', center.Slots)}</td>");
-                    stringBuilder.AppendLine("</tr>");
-                }
+                stringBuilder.AppendLine("<tr>");
+                stringBuilder.AppendLine($"<td>{center.Date}</td>");
+                stringBuilder.AppendLine($"<td>{center.PinCode}</td>");
+                stringBuilder.AppendLine($"<td>{center.CenterName}</td>");
+                stringBuilder.AppendLine($"<td>{center.AgeLimit}</td>");
+                stringBuilder.AppendLine($"<td>{center.VaccineName}</td>");
+                stringBuilder.AppendLine($"<td>{center.AvailableCapacity}</td>");
+                stringBuilder.AppendLine($"<td>{center.FeeType}</td>");
+                stringBuilder.AppendLine($"<td>{ string.Join(',', center.Slots)}</td>");
+                stringBuilder.AppendLine("</tr>");
             }
             return stringBuilder.ToString();
         }

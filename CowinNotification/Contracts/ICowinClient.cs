@@ -6,6 +6,8 @@ namespace CowinNotification.Contracts
 {
     public interface ICowinClient
     {
-        public Task<IReadOnlyDictionary<string, List<AvailableCenterAndSlots>>> FetchAvailableCenters(CowinRequest cowinRequest);
+        public Task<IReadOnlyCollection<AvailableCenterAndSlots>> GetAvailableCentersByPinCodeAsync(CowinRequestFilter cowinRequest, int pinCode);
+
+        public Task<IReadOnlyCollection<AvailableCenterAndSlots>> GetAvailableCentersByDistrictAsync(CowinRequestFilter cowinRequest, string state, string district);
     }
 }
