@@ -22,16 +22,16 @@ Update `notificationRequest.json` with following property.
 3. `StateName` and `DistrictName` -> Get all centers for district
 4. `Phone` to receive notification on message.
 5. `Email` to receive notification on email.
-6. `AgeLimit` to filter response by age limit (not required).
+6. `AgeLimit` to filter response by age limit (18/45)(not required).
 7. `MinimumAvailableCapacity` to filter response minimum vaccine available (not required).
 8. `FeeType` to filter response by fee type (Paid/Free) (not required).
-6. `Vaccine` to filter response by vaccine (COVAXIN/COVISHIELD) (not required).
+6. `Vaccine` to filter response by vaccine (COVAXIN/COVISHIELD/SPUTNIK V) (not required).
 
 ## Task Scheduler
 
 To Create the task scheduler follow the below steps
 
-1. For those who have want to build .net project, build using release and update `CowinScheduler.xml` `Command` property to the new path of CowinNotification.exe in release folder.
-2. For those who want to use binary files update `CowinScheduler.xml` `Command` property to the new path `{ReplaceDirectory}/BinaryForScheduler/CowinNotification.exe`.
-3. Create task scheduler by importing the  `CowinScheduler.xml` file in Task scheduler
+1. For those who want to build .net project, build using release and update `CowinScheduler.xml` `Command` property to the new path of CowinNotification.exe in release folder also update the `Author` property to your Domain\UserName.
+2. For those who want to use binary files update `CowinScheduler.xml` `Command` property to the new path `{ReplaceDirectory}/BinaryForScheduler/CowinNotification.exe` also update the `Author` property to your Domain\UserName.
+3. Create task scheduler by importing the `CowinScheduler.xml` file in Task scheduler
 4. For logging check event viewer with source type CowinLog
