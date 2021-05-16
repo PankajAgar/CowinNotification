@@ -29,9 +29,10 @@ Update `notificationRequest.json` with following property.
 
 ## Task Scheduler
 
-To Create the task scheduler follow the below steps
+To Create the task scheduler which run every two minutes(default), follow the below steps
 
 1. For those who want to build .net project, build using release and update `CowinScheduler.xml` `Command` property to the new path of CowinNotification.exe in release folder also update the `Author` property to your Domain\UserName.
 2. For those who want to use binary files update `CowinScheduler.xml` `Command` property to the new path `{ReplaceDirectory}/BinaryForScheduler/CowinNotification.exe` also update the `Author` property to your Domain\UserName.
-3. Create task scheduler by importing the `CowinScheduler.xml` file in Task scheduler
-4. For logging check event viewer with source type CowinLog
+3. If you want to update the scheduler interval update `CowinScheduler.xml` `Interval` property to `PT{MinutesToRun}M`
+4. Create task scheduler by importing the `CowinScheduler.xml` file in Task scheduler
+5. For logging check event viewer with source type CowinLog
