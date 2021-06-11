@@ -24,8 +24,10 @@ Update `notificationRequest.json` with following property.
 5. `Email` to receive notification on email.
 6. `AgeLimit` to filter response by age limit (18/45)(not required).
 7. `MinimumAvailableCapacity` to filter response minimum vaccine available (not required).
-8. `FeeType` to filter response by fee type (Paid/Free) (not required).
-6. `Vaccine` to filter response by vaccine (COVAXIN/COVISHIELD/SPUTNIK V) (not required).
+8. `MinimumAvailableCapacityDose1` to filter response minimum vaccine available for dose 1(not required).
+9. `MinimumAvailableCapacityDose2` to filter response minimum vaccine available for dose 2(not required).
+10. `FeeType` to filter response by fee type (Paid/Free) (not required).
+11. `Vaccine` to filter response by vaccine (COVAXIN/COVISHIELD/SPUTNIK V) (not required).
 
 ## Task Scheduler
 

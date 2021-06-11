@@ -113,6 +113,8 @@ namespace CowinNotification.Services
                 stringBuilder.AppendLine($"<td>{center.AgeLimit}</td>");
                 stringBuilder.AppendLine($"<td>{center.VaccineName}</td>");
                 stringBuilder.AppendLine($"<td>{center.AvailableCapacity}</td>");
+                stringBuilder.AppendLine($"<td>{center.AvailableCapacityDose1}</td>");
+                stringBuilder.AppendLine($"<td>{center.AvailableCapacityDose2}</td>");
                 stringBuilder.AppendLine($"<td>{center.FeeType}</td>");
                 stringBuilder.AppendLine($"<td>{ string.Join(',', center.Slots)}</td>");
                 stringBuilder.AppendLine("</tr>");

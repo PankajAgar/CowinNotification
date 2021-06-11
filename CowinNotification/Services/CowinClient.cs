@@ -58,8 +58,10 @@ namespace CowinNotification.Services
                 {
                     foreach (var session in vaccineCenter.Sessions)
                     {
-                        if ((((cowinRequest.AgeLimit ?? 0) == 0) || session.AgeLimit == cowinRequest.AgeLimit)
-                            && (session.AvailableCapacity > (cowinRequest.MinimumAvailableCapacity ?? 0))
+                        if (session.AgeLimit == (cowinRequest.AgeLimit ?? session.AgeLimit)
+                            && session.AvailableCapacity >= (cowinRequest.MinimumAvailableCapacity ?? 1)
+                            && ((cowinRequest.MinimumAvailableCapacityDose1 ?? 0) > 0 ? session.AvailableCapacityDose1 >= cowinRequest.MinimumAvailableCapacityDose1 : true
+                            || (cowinRequest.MinimumAvailableCapacityDose2 ?? 0) > 0 ? session.AvailableCapacityDose2 >= cowinRequest.MinimumAvailableCapacityDose2 : true)
                             && (string.IsNullOrWhiteSpace(cowinRequest.Vaccine) || string.Equals(session.Vaccine, cowinRequest.Vaccine, StringComparison.InvariantCultureIgnoreCase)))
                         {
                             centerAndSlots.Add(new AvailableCenterAndSlots
@@ -71,6 +73,8 @@ namespace CowinNotification.Services
                                 VaccineName = session.Vaccine,
                                 FeeType = vaccineCenter.FeeType,
                                 AvailableCapacity = session.AvailableCapacity,
+                                AvailableCapacityDose1 = session.AvailableCapacityDose1,
+                                AvailableCapacityDose2 = session.AvailableCapacityDose2,
                                 Slots = session.Slots
                             });
                         }

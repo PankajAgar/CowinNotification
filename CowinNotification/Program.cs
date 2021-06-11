@@ -111,12 +111,14 @@ namespace CowinNotification
             {
                 AgeLimit = notificationData.AgeLimit,
                 MinimumAvailableCapacity = notificationData.MinimumAvailableCapacity,
+                MinimumAvailableCapacityDose1 = notificationData.MinimumAvailableCapacityDose1,
+                MinimumAvailableCapacityDose2 = notificationData.MinimumAvailableCapacityDose2,
                 FeeType = notificationData.FeeType,
                 Vaccine = notificationData.Vaccine
             };
             var response = new List<AvailableCenterAndSlots>();
 
-            if (string.Equals(notificationData.SearchType, "PinCode", StringComparison.InvariantCultureIgnoreCase))
+            if (string.Equals(notificationData.SearchType, "PinCodes", StringComparison.InvariantCultureIgnoreCase))
             {
                 if (notificationData.PinCodes.Count == 0)
                 {
